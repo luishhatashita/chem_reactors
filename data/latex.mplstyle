@@ -1,0 +1,70 @@
+## ***************************************************************************
+## Latex                                                                     *
+## ***************************************************************************
+text.usetex          : True
+text.color           : black
+text.latex.preamble  : \usepackage{amssymb} \usepackage{amsmath}
+
+## ***************************************************************************
+## Font                                                                      *
+## ***************************************************************************
+font.family          : serif
+font.serif           : Computer Modern Roman
+font.sans-serif      : Computer Modern Sans Serif
+font.monospace       : Computer Modern Typewriter
+font.size            : 16 
+
+## ***************************************************************************
+## Figure                                                                    *
+## ***************************************************************************
+figure.dpi           : 300
+figure.autolayout    : True
+figure.facecolor     : white
+
+## ***************************************************************************
+## Axes                                                                      *
+## ***************************************************************************
+axes.facecolor       : white
+axes.edgecolor       : black
+axes.titlecolor      : black
+axes.labelcolor      : black
+#axes.prop_cycle      : cycler('color', ['5014dc','14dcb4','a0dc14','dc143c'])
+#axes.prop_cycle      : cycler('color', ['mediumvioletred','goldenrod','darkorange','red'])
+axes.titlesize       : 16 
+axes.labelsize       : 16 
+axes.formatter.use_mathtext : True
+axes.grid            : True
+axes.grid.which      : major
+
+## ***************************************************************************
+## Lines                                                                     *
+## ***************************************************************************
+lines.linewidth      : 1.5
+lines.markersize     : 5.5
+
+## ***************************************************************************
+## Ticks                                                                     *
+## ***************************************************************************
+xtick.labelsize      : 16 
+xtick.color          : black
+# --------------------
+ytick.labelsize      : 16 
+ytick.color          : black
+
+## ***************************************************************************
+## * Grids                                                                   *
+## ***************************************************************************
+grid.color           : gray
+grid.linestyle       : --
+grid.linewidth       : 0.5
+grid.alpha           : 0.5
+
+## ***************************************************************************
+## * Legend                                                                  *
+## ***************************************************************************
+legend.loc           : best
+legend.frameon       : True 
+legend.fontsize      : 10 
+legend.framealpha    : 0.7
+legend.facecolor     : lightgrey
+legend.edgecolor     : lightgrey
