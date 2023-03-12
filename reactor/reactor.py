@@ -14,29 +14,48 @@ class PlugFlowReactor:
     library.
     \Phi CH4 + 2(O2 + 3.76N2) -> CO2 + 2H2O + 7.52N2
     """
-    def __init__(self, T_0=c.T_0, p_0=c.P_0, phi=c.PHI):
+    def __init__(self, T_0=c.T_0, p_0=c.P_0, phi=c.PHI, length=c.LENGTH):
         """
         Initialization of plug flow reactor as a function of initial temperature,
         pressure and equivalence ratio.
 
         Parameters
         ----------
-        T_0 = float
+        T_0 : float
             initial temperature, default as 1200 K.
-        p_0 = float
+        p_0 : float
             initial pressure, default as 101325 Pa (1 atm).
-        phi = float
+        phi : float
             equivalence ratio, default as 1 for stoichiometric composition.
+        length : float
+            length for the flow reactor, which should be determined according to
+            the desired residence time. Default as 6e-4m for 100ms of residence
+            time.
         """
         self.T_0 = T_0
         self.p_0 = p_0
         self.phi = phi
-        self.length = c.LENGTH
+        self.length = length 
         self.u_0 = c.U_0
         self.area = c.AREA
 
-        # Set composition string for cantera solution
+        # Set composition string for cantera solution, considering standard
+        #oxidizer of O2:3.76N2
         self.comp = h.set_composition(self.phi)
+        
+    def change_oxidizer(self, comp):
+        """
+        For brevity, composition calculation will be performed by hand for the
+        three following oxidizer options:
+            1 - pure O2
+            2 - X_O2=0.207, X_N2=0.79, X_OH=0.003
+            3 - X_O2=0.207, X_N2=0.79, X_H2O=0.003
+        Final composition to be inputed:
+            1 - \Phi CH4 + 2O2 -> CO2 + 2H2O
+            2 - \Phi CH4 + 1.993(O2 + 3.816N2 + 0.015OH) -> CO2 + 2.016H2O
+            3 - \Phi CH4 + 2(O2 + 3.816N2 + 0.015H2O) -> CO2 + 2.03H2O
+        """
+        self.comp = comp
 
     def compute_solution(self, mech_file='./data/mech-FFCM1.yaml', n_steps=2000):
         """
@@ -72,7 +91,6 @@ class PlugFlowReactor:
             zs[i] = zs[i-1] + us[i] * dt
             states.append(reactor.thermo.state)
 
-        print(states.T)
         self.results = {
             'space': zs,
             'time': ts,
@@ -89,7 +107,6 @@ class PlugFlowReactor:
     def plot_ignition_delay(self):
         """
         Plot  for the plug flow reactor methane-air flame.
-            > temperature vs time;
             > temperature/molefraction vs space.
         """
         # Temperature vs time
@@ -100,8 +117,18 @@ class PlugFlowReactor:
             xscale = 'log',
             ylabel = 'Temperature [K]'
         )
+        fig1.savefig(
+            f'./results/pfr_t_T_{self.p_0}_{self.T_0}_{self.phi}.svg',
+            format='svg',
+            bbox_inches='tight'
+        )
 
-         
+    def plot_ignition_delay_comp(self):
+        """
+        Plot  for the plug flow reactor methane-air flame.
+            > temperature/molefraction vs space.
+        """
+        # Composition vs time
         fig2, ax2_a = plt.subplots()
         ax2_b = ax2_a.twinx()
         ax2_a.plot(self.results['time'], self.results['X_CH4'], label=r'X$_{\text{CH}_4}$')
@@ -114,16 +141,20 @@ class PlugFlowReactor:
         ax2_a.set(
             xlabel = 'Time [s]',
             #xscale = 'log',
-            xlim = (0.00007, 0.0002),
-            ylabel = 'Mole fraction [-]'
+            xlim = (0.001, 0.0075),
+            ylabel = 'Mole fraction [-]',
+            #yscale = 'log',
         )
         ax2_a.legend()
-        ax2_b.plot(self.results['time'], self.results['temperature'])
+        ax2_b.plot(self.results['time'], self.results['temperature'], '--', color='k')
         ax2_b.set(
             ylabel = 'Temperature [K]'
         )
-
-        plt.show()
+        fig2.savefig(
+            f'./results/pfr_t_X_{int(self.p_0/ct.one_atm)}_{self.T_0}_{self.phi}.svg',
+            format='svg',
+            bbox_inches='tight'
+        )
 
 class WellStirredReactor:
     """
@@ -167,19 +198,19 @@ class WellStirredReactor:
         gas.TPX = self.T_0, self.p_0, self.comp
 
         # Create the whole arrangement for the reactor
-        mixture_tank = ct.Reservoir(gas)
+        inlet = ct.Reservoir(gas)
         gas.equilibrate('HP')
         reactor = ct.IdealGasReactor(gas, volume=self.volume)
         exhaust = ct.Reservoir(gas)
-        mass_flow_controller = ct.MassFlowController(
-            upstream=mixture_tank,
+        inlet_mfc = ct.MassFlowController(
+            upstream=inlet,
             downstream=reactor,
-            mdot=reactor.mass / self.res_time,
+            mdot=h.mdot, # not working properly to vary the mass flow depending on the residence time
         )
-        pressure_valve = ct.PressureController(
+        outlet_mfc = ct.PressureController(
             upstream=reactor,
             downstream=exhaust,
-            master=mass_flow_controller,
+            master=inlet_mfc,
             K=0.01,
         )
         # Reactor network for time integration
@@ -191,10 +222,11 @@ class WellStirredReactor:
 
         # Loop over residence times
         #tic = time.time()
-        t = 0
-        residence_time = self.res_time
+        #t = 0
         counter = 1
-        while (reactor.T > 500) and (counter < 50):
+        residence_time = self.res_time
+        while reactor.T > 500:
+        #while (reactor.T > 500) and (counter < 50):
             simulation.set_initial_time(0.0)
             simulation.advance_to_steady_state()
             print(f'tres: {residence_time:.2e}; T: {reactor.T}')
