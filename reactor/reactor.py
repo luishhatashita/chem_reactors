@@ -93,6 +93,7 @@ class PlugFlowReactor:
 
         self.results = {
             'space': zs,
+            'space_norm': zs/self.length,
             'time': ts,
             'temperature': states.T,
             'X_CH4': states.X[:, gas.species_index('CH4')],
@@ -131,27 +132,27 @@ class PlugFlowReactor:
         # Composition vs time
         fig2, ax2_a = plt.subplots()
         ax2_b = ax2_a.twinx()
-        ax2_a.plot(self.results['time'], self.results['X_CH4'], label=r'X$_{\text{CH}_4}$')
-        ax2_a.plot(self.results['time'], self.results['X_O2'], label=r'X$_{\text{O}_2}$')
-        ax2_a.plot(self.results['time'], self.results['X_OH'], label=r'X$_{\text{OH}}$')
-        ax2_a.plot(self.results['time'], self.results['X_H2'], label=r'X$_{\text{H}_2}$')
-        ax2_a.plot(self.results['time'], self.results['X_CO'], label=r'X$_{\text{CO}}$')
-        ax2_a.plot(self.results['time'], self.results['X_H2O'], label=r'X$_{\text{H}_2\text{O}}$')
-        ax2_a.plot(self.results['time'], self.results['X_CO2'], label=r'X$_{\text{CO}_2}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_CH4'], label=r'X$_{\text{CH}_4}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_O2'], label=r'X$_{\text{O}_2}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_OH'], label=r'X$_{\text{OH}}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_H2'], label=r'X$_{\text{H}_2}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_CO'], label=r'X$_{\text{CO}}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_H2O'], label=r'X$_{\text{H}_2\text{O}}$')
+        ax2_a.plot(self.results['space_norm'], self.results['X_CO2'], label=r'X$_{\text{CO}_2}$')
         ax2_a.set(
-            xlabel = 'Time [s]',
+            xlabel = 'Normalized distance [-]',
             #xscale = 'log',
-            xlim = (0.001, 0.0075),
+            xlim = (0.0, 1.0),
             ylabel = 'Mole fraction [-]',
             #yscale = 'log',
         )
-        ax2_a.legend()
-        ax2_b.plot(self.results['time'], self.results['temperature'], '--', color='k')
+        ax2_a.legend(loc=7)
+        ax2_b.plot(self.results['space_norm'], self.results['temperature'], '--', color='k')
         ax2_b.set(
             ylabel = 'Temperature [K]'
         )
         fig2.savefig(
-            f'./results/pfr_t_X_{int(self.p_0/ct.one_atm)}_{self.T_0}_{self.phi}.svg',
+            f'./results/pfr_s_X_{int(self.p_0/ct.one_atm)}_{self.T_0}_{self.phi}.svg',
             format='svg',
             bbox_inches='tight'
         )

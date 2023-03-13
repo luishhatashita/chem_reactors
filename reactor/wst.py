@@ -36,7 +36,7 @@ states = ct.SolutionArray(gas, extra=['tres'])
 
 # Loop over residence times
 counter = 1
-residence_time = 50 
+residence_time = 10 
 while reactor.T > 500:
 #while (reactor.T > 500) and (counter < 50):
     simulation.set_initial_time(0.0)
@@ -51,7 +51,7 @@ ax2 = ax1.twinx()
 ax1.plot(states.tres, states('CO').X, label=r'CO')
 ax1.plot(states.tres, states('CO2').X, label=r'CO$_2$')
 ax1.plot(states.tres, states('NO').X, label=r'NO')
-ax2.plot(states.tres[:], states.T[:], 'r')
+ax2.plot(states.tres[:], states.T[:], '--', color='k')
 ax1.set(
     xlabel='Residence time [s]',
     xscale='log',
